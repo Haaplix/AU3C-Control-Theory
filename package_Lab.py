@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 
+from package_DBR import Process
+
 #-----------------------------------
 
 
@@ -44,3 +46,16 @@ def LL_RT(MV,Kp,Tlag,Tlead,Ts,PV,PVInit=0,method='EBD'):
         PV.append(Kp*MV[-1])
 
 #-----------------------------------
+
+
+def IMC_tuning_H(K,T,theta,gamma,C): #P,C,gamma (paramètres du prof)
+    TOLP = T
+    TCLP = gamma * TOLP
+    Ti = TOLP + (theta/2)
+    Td = (TOLP*theta)/((2*TOLP)+theta)
+    KcK=(TOLP + (theta/2))/(TCLP+(theta/2))
+    Kc = KcK/K
+    C = Process({})
+    C.parameters['Ti'] = Ti
+    C.parameters['Td'] = Td
+    C.parameters['Kc'] = Kc
