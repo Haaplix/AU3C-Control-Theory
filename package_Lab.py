@@ -7,10 +7,10 @@ from IPython.display import display, clear_output
 
 
 #-----------------------------------        
-def FO_RT(MV,Kp,T,Ts,PV,PVInit=0,method='EBD'):
+def LL_RT(MV,Kp,T,Ts,PV,PVInit=0,method='EBD'):
     
     """
-    The function "FO_RT" needs to be included in a "for or while loop".
+    The function "LL_RT" needs to be included in a "for or while loop".
     
     :MV: input vector
     :Kp: process gain
