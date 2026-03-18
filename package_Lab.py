@@ -156,16 +156,13 @@ Note that saturation of "MV" within the limits [MVMin, MVMax] is implemented wit
     #MV
     MV.append(MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1])
 
-def IMC_tuning_H(K,T,theta,C,gamma): #P,C,gamma (paramètres du prof)
+def IMC_tuning_H(K,T,theta,gamma): #P,C,gamma (paramètres du prof)
     TOLP = T
     TCLP = gamma * TOLP
     Ti = TOLP + (theta/2)
     Td = (TOLP*theta)/((2*TOLP)+theta)
     KcK=(TOLP + (theta/2))/(TCLP+(theta/2))
     Kc = KcK/K
-    C = Process({})
-    C.parameters['Ti'] = Ti
-    C.parameters['Td'] = Td
-    C.parameters['Kc'] = Kc
+    return Ti,Td,Kc
 
 
