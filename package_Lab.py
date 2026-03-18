@@ -37,7 +37,7 @@ def LL_RT(MV,Kp,Tlag,Tlead,Ts,PV,PVInit=0,method='EBD'):
             if method == 'EBD':
                 PV.append((1/(1+K))*PV[-1] + (K*Kp/(1+K))*((1+(Tlead/Ts))*MV[-1]-(Tlead/Ts)*MV[-2]))
             elif method == 'EFD':
-                PV.append((1-K)*PV[-1] + K*Kp*((Tlead/Ts)*MV[-1]+(1-(Tlead/Ts)*MV[-2])))
+                PV.append((1-K)*PV[-1] + K*Kp*((Tlead/Ts)*MV[-1]+((1-(Tlead/Ts))*MV[-2])))
             # elif method == 'TRAP':
             #     PV.append((1/(2*Tlag+Ts))*((2*Tlag-Ts)*PV[-1] + Kp*Ts*(MV[-1] + MV[-2])))
             else:
@@ -156,7 +156,7 @@ Note that saturation of "MV" within the limits [MVMin, MVMax] is implemented wit
     #MV
     MV.append(MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1])
 
-def IMC_tuning_H(K,T,theta,gamma,C): #P,C,gamma (paramètres du prof)
+def IMC_tuning_H(K,T,theta,C,gamma): #P,C,gamma (paramètres du prof)
     TOLP = T
     TCLP = gamma * TOLP
     Ti = TOLP + (theta/2)
@@ -167,3 +167,5 @@ def IMC_tuning_H(K,T,theta,gamma,C): #P,C,gamma (paramètres du prof)
     C.parameters['Ti'] = Ti
     C.parameters['Td'] = Td
     C.parameters['Kc'] = Kc
+
+
