@@ -156,13 +156,52 @@ Note that saturation of "MV" within the limits [MVMin, MVMax] is implemented wit
     #MV
     MV.append(MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1])
 
-def IMC_tuning_H(K,T,theta,gamma): #P,C,gamma (paramètres du prof)
-    TOLP = T
-    TCLP = gamma * TOLP
-    Ti = TOLP + (theta/2)
-    Td = (TOLP*theta)/((2*TOLP)+theta)
-    KcK=(TOLP + (theta/2))/(TCLP+(theta/2))
-    Kc = KcK/K
+    
+
+def IMC_tuning(Kp,T1,T2,theta,gamma,method="SO"): 
+
+     
+    """ 
+    :Kp: protocol gain
+
+    :T1: main time constant [s]
+
+    :T2: secondary time constant [s]
+
+    :theta: delay
+
+    :gamma: in the range [0,2 ... 0,9], determines the rapidity, agressivity of the reponse
+
+    :method: discretisation method (optional: default value is 'SO')
+
+    SO:  SO for the case second order + dead-time 
+    FO: FO for the case first order + dead-time (for a PID)
+
+    The function "IMC_tuning" returns the value of Ti (integral time constant [s]), Td (derivative time constant [s]) and Kc (controller gain).
+    The returned values are based on the table "IMC-Based PID Controller Settings for Gc(s)"."""
+
+
+    TCLP = gamma * T1
+
+    if (method == "FO"):
+        Ti = T1 + (theta/2)
+        Td = (T1*theta)/((2*T1)+theta)
+        KcK=(T1 + (theta/2))/(TCLP+(theta/2))
+        Kc = KcK/Kp
+        
+    if (method == "SO"):
+        Ti = T1 + T2
+        Td = (T1*T2)/(T1+T2)
+        KcK= (T1+T2)/(TCLP+theta)
+        Kc = KcK/Kp
+    else:
+        Ti = T1 + T2
+        Td = (T1*T2)/(T1+T2)
+        KcK= (T1+T2)/(TCLP+theta)
+        Kc = KcK/Kp
+    
     return Ti,Td,Kc
+    
+    
 
 
