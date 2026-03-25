@@ -119,6 +119,7 @@ Note that saturation of "MV" within the limits [MVMin, MVMax] is implemented wit
     #MVI 
     if len(MVI) == 0:
         MVI.append(Kc*Ts/Ti*E[-1]) #initial condition for MVI
+        print(MVI, 'initial MVI')
     else:
         if method == 'TRAP':
             MVI.append(MVI[-1] + Kc*Ts/(2*Ti)*(E[-1] + E[-2])) #TRAP for integral action
