@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 
-from package_DBR import Process
+from package_DBR import Bode, Process
 
 #-----------------------------------
 
@@ -121,19 +121,19 @@ Note that saturation of "MV" within the limits [MVMin, MVMax] is implemented wit
         MVI.append(Kc*Ts/Ti*E[-1]) #initial condition for MVI
         print(MVI, 'initial MVI')
     else:
-        if method == 'TRAP':
-            MVI.append(MVI[-1] + Kc*Ts/(2*Ti)*(E[-1] + E[-2])) #TRAP for integral action
+        if method in ['TRAP-EBD', 'TRAP-TRAP']:
+            MVI.append(MVI[-1] + (Kc*Ts/(2*Ti))*(E[-1] + E[-2])) #TRAP for integral action
         else:
-            MVI.append(MVI[-1] + Kc*Ts/Ti*E[-1]) #default is EBD for integral action
+            MVI.append(MVI[-1] + ((Kc*Ts)/Ti)*E[-1]) #default is EBD for integral action
 
     #MVD
     if len(MVD) == 0:
-        if method == 'TRAP-EBD' or method == 'TRAP-TRAP':
-            MVD.append((Kc*Td/(Tfd + (Ts/2)))*E[-1]) #initial condition for MVD with TRAP
+        if method in ['EBD-TRAP', 'TRAP-TRAP']:
+            MVD.append(((Kc*Td)/(Tfd + (Ts/2)))*E[-1]) #initial condition for MVD with TRAP
         else:
-            MVD.append((Kc*Td/(Tfd + Ts))*E[-1]) #initial condition for MVD
+            MVD.append(((Kc*Td)/(Tfd + Ts))*E[-1]) #initial condition for MVD
     else:
-        if method == 'EBD-TRAP' or method == 'TRAP-TRAP':
+        if method in ['EBD-TRAP', 'TRAP-TRAP']:
             MVD.append(((Tfd-(Ts/2))/(Tfd + (Ts/2)))*MVD[-1] + ((Kc*Td)/(Tfd + (Ts/2)))*(E[-1] - E[-2])) #TRAP for derivative action
         else:
             MVD.append((Tfd/(Tfd + Ts))*MVD[-1] + ((Kc*Td)/(Tfd + Ts))*(E[-1] - E[-2])) #default is EBD for derivative action
@@ -203,6 +203,56 @@ def IMC_tuning(Kp,T1,T2,theta,gamma,method="SO"):
     
     return Ti,Td,Kc
     
+class Controller:
     
+    def __init__(self, parameters):
+        
+        self.parameters = parameters
+        self.parameters['Kc'] = parameters['Kc'] if 'Kc' in parameters else 1.0
+        self.parameters['Ti'] = parameters['Ti'] if 'Ti' in parameters else 0.0
+        self.parameters['Td'] = parameters['Td'] if 'Td' in parameters else 0.0
+        self.parameters['TFD'] = parameters['TFD'] if 'TFD' in parameters else 0.0
+        self.parameters['E'] = parameters['E'] if 'E' in parameters else 0.0
+        
 
 
+    
+def Margin(P, C, omega):
+
+    L = P * C
+    L_gain = 20*np.log10(np.abs(L)/5)
+    L_phase = np.degrees(np.unwrap(np.angle(L)))  
+
+    fig, (ax_gain, ax_phase) = plt.subplots(2, 1)
+    fig.set_figheight(12)
+    fig.set_figwidth(22)
+
+    # ax_gain.plot(omega, L_gain, label='L Gain')
+    # ax_phase.plot(omega, L_phase, label='L Phase')
+
+    
+    # ax_gain.set_ylabel('Amplitude' + r'\n $|P(j\omega)|$ [dB]')
+    # ax_gain.set_title('Bode plot of P')
+    # ax_gain.legend(loc='best')
+
+
+    ax_gain.semilogx(omega,L_gain,label=r'$P*C$')   
+    gain_min = np.min(L_gain)
+    gain_max = np.max(L_gain)
+    ax_gain.set_xlim([np.min(omega), np.max(omega)])
+    ax_gain.set_ylim([gain_min, gain_max])
+    ax_gain.set_ylabel('Amplitude' + r'\n $|P*C(j\omega)|$ [dB]')
+    ax_gain.set_title('Bode plot of P*C')
+    ax_gain.legend(loc='best')
+
+
+    ax_phase.semilogx(omega, L_phase,label=r'$P*C$')   
+    ax_phase.set_xlim([np.min(omega), np.max(omega)])
+    ph_min = np.min(L_phase) - 10
+    ph_max = np.max(L_phase) + 10
+    ax_phase.set_ylim([np.max([ph_min, -200]), ph_max])
+    ax_phase.set_xlabel(r'Frequency $\omega$ [rad/s]')        
+    ax_phase.set_ylabel('Phase' + r'\n $\,$'  + r'$\angle P*C(j\omega)$ [°]')
+    ax_phase.legend(loc='best')
+
+    return
