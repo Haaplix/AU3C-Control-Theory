@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+from arrow import now
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -217,7 +220,15 @@ class Controller:
 
 
     
-def Margin(P, C, omega):
+def Margin(P, C, omega, save_fig=False):
+
+    C_gain = 20*np.log10(np.abs(C)/5)
+    C_phase = np.degrees(np.unwrap(np.angle(C)))
+
+
+    P_gain = 20*np.log10(np.abs(P)/5)
+    P_phase = np.degrees(np.unwrap(np.angle(P)))
+
 
     L = P * C
     L_gain = 20*np.log10(np.abs(L)/5)
@@ -227,32 +238,78 @@ def Margin(P, C, omega):
     fig.set_figheight(12)
     fig.set_figwidth(22)
 
-    # ax_gain.plot(omega, L_gain, label='L Gain')
-    # ax_phase.plot(omega, L_phase, label='L Phase')
-
     
-    # ax_gain.set_ylabel('Amplitude' + r'\n $|P(j\omega)|$ [dB]')
-    # ax_gain.set_title('Bode plot of P')
-    # ax_gain.legend(loc='best')
 
-
-    ax_gain.semilogx(omega,L_gain,label=r'$P*C$')   
+    ax_gain.semilogx(omega,L_gain,label=r'$P(s)*C(s)$') # L gain
+    ax_gain.semilogx(omega,C_gain,label=r'$C(s)$', linestyle='--') # C gain
+    ax_gain.semilogx(omega,P_gain,label=r'$P(s)$', linestyle='--', color="black") # P gain
     gain_min = np.min(L_gain)
     gain_max = np.max(L_gain)
     ax_gain.set_xlim([np.min(omega), np.max(omega)])
-    ax_gain.set_ylim([gain_min, gain_max])
-    ax_gain.set_ylabel('Amplitude' + r'\n $|P*C(j\omega)|$ [dB]')
-    ax_gain.set_title('Bode plot of P*C')
+    #ax_gain.set_ylim([gain_min, gain_max])
+    ax_gain.set_ylabel('Amplitude' + r'\n $|P(s)*C(s)|$ [dB]')
+    ax_gain.set_title('Bode plot of P(s)*C(s)')
     ax_gain.legend(loc='best')
+    ax_gain.grid(which='both', linestyle='--', linewidth=0.5)
+
+    ax_gain.axhline(0, color='red', linestyle='-.', linewidth=1, label='0 dB')
+
+    # Phase crossover frequency → gain margin
+    phase_cross_idx = np.argmin(np.abs(L_phase - (-180)))
+    omega_phase_cross = omega[phase_cross_idx]
+    gain_at_phase_cross = L_gain[phase_cross_idx]
+    gain_margin = gain_at_phase_cross  
+
+    ax_gain.axvline(omega_phase_cross, color='green', linestyle=':', linewidth=1.2)
+    ax_phase.axvline(omega_phase_cross, color='green', linestyle=':', linewidth=1.2)
+    ax_gain.annotate('', 
+                 xy=(omega_phase_cross*1.1, gain_at_phase_cross),
+                 xytext=(omega_phase_cross*1.1, 0),
+                 arrowprops=dict(arrowstyle='<->', color='green', lw=1.5))
+    
+    ax_gain.text(omega_phase_cross*1.15, gain_at_phase_cross/2, f'GM = {gain_margin:.2f} dB', color='green', fontsize=10)
 
 
-    ax_phase.semilogx(omega, L_phase,label=r'$P*C$')   
+    ax_phase.semilogx(omega, L_phase,label=r'$P(s)*C(s)$') # L phase
+    ax_phase.semilogx(omega, C_phase,label=r'$C(s)$', linestyle='--') # C phase
+    ax_phase.semilogx(omega, P_phase,label=r'$P(s)$', linestyle='--', color="black") # P phase   
     ax_phase.set_xlim([np.min(omega), np.max(omega)])
     ph_min = np.min(L_phase) - 10
     ph_max = np.max(L_phase) + 10
-    ax_phase.set_ylim([np.max([ph_min, -200]), ph_max])
+    ax_phase.set_ylim([np.max([ph_min, -200]), 25])
     ax_phase.set_xlabel(r'Frequency $\omega$ [rad/s]')        
-    ax_phase.set_ylabel('Phase' + r'\n $\,$'  + r'$\angle P*C(j\omega)$ [°]')
+    ax_phase.set_ylabel('Phase' + r'\n $\,$'  + r'$\angle P(s)*C(s)$ [°]')
     ax_phase.legend(loc='best')
+    ax_phase.grid(which='both', linestyle='--', linewidth=0.5)
 
-    return
+
+    # -180° reference line
+    ax_phase.axhline(-180, color='red', linestyle='-.', linewidth=1, label=r'$-180°$')
+
+    # Gain crossover frequency (where gain = 0 dB) → phase margin
+    gain_cross_idx = np.argmin(np.abs(L_gain))
+    omega_gain_cross = omega[gain_cross_idx]
+    phase_at_gain_cross = L_phase[gain_cross_idx]
+    phase_margin = phase_at_gain_cross + 180  # PM = phase + 180 at gain crossover
+
+    ax_phase.axvline(omega_gain_cross, color='purple', linestyle=':', linewidth=1.2)
+    ax_gain.axvline(omega_gain_cross, color='purple', linestyle=':', linewidth=1.2)
+
+
+    ax_phase.annotate('', 
+                 xy=(omega_gain_cross*1.1, -180),
+                 xytext=(omega_gain_cross*1.1, -95),
+                 arrowprops=dict(arrowstyle='<->', color='purple', lw=1.5))
+    
+    ax_phase.text(omega_gain_cross*1.15, -137.5, f'PM = {phase_margin:.2f}°', color='purple', fontsize=10)
+    
+    if save_fig:
+        if not os.path.exists('Plots'):
+            os.makedirs('Plots')    
+        date_time = datetime.now().strftime("%Y-%m-%d-%Hh%M")
+        name = f'Margin_{date_time}'
+        plt.savefig(f'Plots\\' + name+ '.png')
+        plt.savefig(f'Plots\\' + name+ '.svg')
+    
+
+    return gain_margin, phase_margin
