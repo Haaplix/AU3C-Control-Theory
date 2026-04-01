@@ -222,6 +222,21 @@ class Controller:
     
 def Margin(P, C, omega, save_fig=False):
 
+    """
+    Calculate the gain and phase margins of a control system.
+
+    P: Process transfer function
+
+    C: Controller transfer function
+
+    omega: frequency range for Bode plot
+
+    save_fig: Boolean to decide whether to save the Bode plot figure in Plots
+
+    The function returns the gain margin (dB) and the phase margin (degrees) of the system. It also plots and shows the Bode Diagram of P(s)*C(s) with the gain and phase margins annotated.
+    """
+
+    
     C_gain = 20*np.log10(np.abs(C)/5)
     C_phase = np.degrees(np.unwrap(np.angle(C)))
 
