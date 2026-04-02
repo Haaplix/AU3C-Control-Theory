@@ -231,7 +231,7 @@ def Margin(P, C, omega, save_fig=False):
 
     omega: frequency range for Bode plot
 
-    save_fig: Boolean to decide whether to save the Bode plot figure in Plots
+    save_fig: Boolean to decide whether to save the Bode plot figure in Plots folder
 
     The function returns the gain margin (dB) and the phase margin (degrees) of the system. It also plots and shows the Bode Diagram of P(s)*C(s) with the gain and phase margins annotated.
     """
